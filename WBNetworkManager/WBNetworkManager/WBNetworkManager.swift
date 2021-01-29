@@ -116,7 +116,7 @@ extension WBNetworkManager {
         
         /****************************配置断言**********************************/
         
-        assert(url.isEmpty, "传入的url为空")
+        assert(url != "", "传入的url为空")
         
         /****************************开始配置request***************************/
         
@@ -251,13 +251,14 @@ extension WBNetworkManager {
         // 如果传了params参数, 无论是GET还是POST, 都做处理, 因为有时候是POST请求有body, 又有参数的情况
         // 所以只要传了params, 就做处理
         if params != nil {
-            var components = URLComponents(string: url)
+            var components = URLComponents(string: url)!
+            components.queryItems = [URLQueryItem]()
             for (key, value) in params! {
-                components?.queryItems?.append(URLQueryItem(name: key, value: value))
+                components.queryItems?.append(URLQueryItem(name: key, value: value))
             }
-            let query = components?.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
-            components?.percentEncodedQuery = query
-            return (components?.url)!
+            let query = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+            components.percentEncodedQuery = query
+            return (components.url)!
         } else {
             return URL(string: url)!
         }
