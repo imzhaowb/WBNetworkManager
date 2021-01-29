@@ -93,34 +93,6 @@ class WBNetworkManager: NSObject {
     }
 }
 
-// MARK: - 处理网络请求的配置信息
-
-extension WBNetworkManager {
-    
-    /// 配置参数params
-    /// - Parameters:
-    ///   - url: url
-    ///   - params: params
-    /// - Returns: 处理后的url
-    private func configParams(url: String, params: [String: String]?) -> URL {
-        
-        // 配置参数
-        // 如果传了params参数, 无论是GET还是POST, 都做处理, 因为有时候是POST请求有body, 又有参数的情况
-        // 所以只要传了params, 就做处理
-        if params != nil {
-            var components = URLComponents(string: url)
-            for (key, value) in params! {
-                components?.queryItems?.append(URLQueryItem(name: key, value: value))
-            }
-            let query = components?.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
-            components?.percentEncodedQuery = query
-            return (components?.url)!
-        } else {
-            return URL(string: url)!
-        }
-    }
-}
-
 // MARK:- 普通网络请求
 
 extension WBNetworkManager {
@@ -200,6 +172,9 @@ extension WBNetworkManager {
         
         assert(url.isEmpty, "传入的url为空")
         assert(fileData == nil && filePathURL == nil, "传入文件为空, 请检查fileData或filePathURL")
+        assert(name == nil, "传入name为空")
+        assert(fileName == nil, "传入fileName为空")
+        assert(mimeType == nil, "传入mimeType为空")
         
         /****************************开始配置request***************************/
         
@@ -210,11 +185,10 @@ extension WBNetworkManager {
         // 配置请求类型
         request.httpMethod = "POST"
         
-        // 配置参数
-        var params = [String: String]()
-        params["name"] = name
-        params["fileName"] = fileName
-        params["mimeType"] = mimeType
+        // 配置body
+        let params = ["name": name!,
+                      "fileName": fileName!,
+                      "mimeType": mimeType!]
         
         request.httpBody = try? JSONSerialization.data(withJSONObject: params, options: .fragmentsAllowed)
         
@@ -262,9 +236,32 @@ extension WBNetworkManager {
     
 }
 
-// MARK:- 统一处理网络请求返回的结果
+// MARK:- 统一处理网络请求的信息
 
 extension WBNetworkManager {
+    
+    /// 处理网络请求的配置信息
+    /// - Parameters:
+    ///   - url: url
+    ///   - params: params
+    /// - Returns: 处理后的url
+    private func configParams(url: String, params: [String: String]?) -> URL {
+        
+        // 配置参数
+        // 如果传了params参数, 无论是GET还是POST, 都做处理, 因为有时候是POST请求有body, 又有参数的情况
+        // 所以只要传了params, 就做处理
+        if params != nil {
+            var components = URLComponents(string: url)
+            for (key, value) in params! {
+                components?.queryItems?.append(URLQueryItem(name: key, value: value))
+            }
+            let query = components?.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+            components?.percentEncodedQuery = query
+            return (components?.url)!
+        } else {
+            return URL(string: url)!
+        }
+    }
     
     /// 网络请求返回结果统一处理
     /// - Parameters:
